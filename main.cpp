@@ -1,6 +1,11 @@
 #include <iostream>
 
+using namespace std;
+
 int main()
 {
-    std::cout << "Hello Bro" << std::endl;
+    cout << "Enter a number ";
+    int value;
+    cin >> value;
+    cout << "Value = " << value << endl;
 }
