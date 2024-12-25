@@ -36,12 +36,12 @@ bool validateFileType(const std::string &filePath, FileType expectedType) {
 
     std::vector<unsigned char> headerBytes;
     size_t requiredBytes = 0;
-    std::vector<unsigned char> expectedMagic;
+    std::vector<uint8_t> expectedHeader = {0xFF, 0xD8, 0xFF};
+
 
     switch (expectedType) {
         case FileType::JPEG:
-            expectedMagic = {0xFF, 0xD8, 0xFF};
-            requiredBytes = expectedMagic.size();
+            requiredBytes = expectedHeader.size();
             break;
         // Add more cases here for different file types
         default:
@@ -50,5 +50,5 @@ bool validateFileType(const std::string &filePath, FileType expectedType) {
 
     headerBytes = readHeaderBytes(filePath, requiredBytes);
 
-    return std::equal(expectedMagic.begin(), expectedMagic.end(), headerBytes.begin());
+    return std::equal(expectedHeader.begin(), expectedHeader.end(), headerBytes.begin());
 }
