@@ -49,3 +49,5 @@ int main(int argc, char* argv[]) {
 // g++ -std=c++14 -o main main.cpp FileTypeValidator.cpp
 
 // ./main /Users/devansh/File-Compressor/Images/test2.jpeg jpeg
+
+// ./main /Users/devansh/File-Compressor/Images/test3.test jpeg [SHOULD BE A VAILD JPEG as it is renamed from test2]
