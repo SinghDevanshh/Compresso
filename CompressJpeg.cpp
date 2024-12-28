@@ -166,6 +166,28 @@ void applyDCT(std::vector<int>& block) {
     block = temp;
 }
 
+// void applyDCT(std::vector<int>& block) {
+//     std::vector<double> temp(64);
+//     for (int u = 0; u < 8; ++u) {
+//         for (int v = 0; v < 8; ++v) {
+//             double sum = 0;
+//             for (int x = 0; x < 8; ++x) {
+//                 for (int y = 0; y < 8; ++y) {
+//                     double coeff = block[y * 8 + x];
+//                     sum += coeff * cos(((2 * x + 1) * u * M_PI) / 16.0) *
+//                            cos(((2 * y + 1) * v * M_PI) / 16.0);
+//                 }
+//             }
+//             double cu = (u == 0) ? 1 / sqrt(2.0) : 1.0;
+//             double cv = (v == 0) ? 1 / sqrt(2.0) : 1.0;
+//             temp[u * 8 + v] = 0.25 * cu * cv * sum;
+//         }
+//     }
+//     for (int i = 0; i < 64; ++i) {
+//         block[i] = round(temp[i]);
+//     }
+// }
+
 /*
 Quantization:
 
@@ -189,11 +211,6 @@ Using Huffman encoding
 std::map<int, int> buildFrequencyTable(const std::vector<std::vector<int>>& blocks) {
     std::map<int, int> frequencyTable;
 
-    // Initialize all possible values with frequency 0
-    for (int i = -255; i <= 255; ++i) {
-        frequencyTable[i] = 0;
-    }
-
     for (const auto& block : blocks) {
         for (int coeff : block) {
             frequencyTable[coeff]++;
@@ -205,6 +222,7 @@ std::map<int, int> buildFrequencyTable(const std::vector<std::vector<int>>& bloc
 
 
 Node* buildHuffmanTree(const std::map<int, int>& frequencyTable) {
+
     std::priority_queue<Node*, std::vector<Node*>, Compare> pq;
 
     for (const auto& pair : frequencyTable) {
@@ -225,11 +243,22 @@ Node* buildHuffmanTree(const std::map<int, int>& frequencyTable) {
     return pq.top(); // Root of the Huffman tree
 }
 
+void freeHuffmanTree(Node* root) {
+    if (root) {
+        freeHuffmanTree(root->left);
+        freeHuffmanTree(root->right);
+        delete root;
+    }
+}
+
 void generateCodes(Node* root, const std::string& code, std::map<int, std::string>& huffmanCodes) {
     if (!root) return;
 
     if (root->value != -1) { // Leaf node
         huffmanCodes[root->value] = code;
+    }
+    else{
+        // Internal node reached, skipping
     }
 
     generateCodes(root->left, code + "0", huffmanCodes);
@@ -248,9 +277,13 @@ std::string encodeBlocks(const std::vector<std::vector<int>>& blocks, const std:
     for (const auto& block : blocks) {
         for (int coeff : block) {
             if (huffmanCodes.find(coeff) == huffmanCodes.end()) {
-                throw std::runtime_error("Missing Huffman code for coefficient: " + std::to_string(coeff));
+                // throw std::runtime_error("Missing Huffman code for coefficient: " + std::to_string(coeff));
+                // std::cout << "Missing Huffman code for coefficient: " + std::to_string(coeff) << std::endl;
+                // Do nothing for now
             }
-            encodedData += huffmanCodes.at(coeff);
+            else{
+                encodedData += huffmanCodes.at(coeff);
+            }
         }
     }
 
@@ -265,14 +298,36 @@ void saveEncodedData(const std::string& encodedData, const std::map<int, std::st
         throw std::runtime_error("Failed to open output file.");
     }
 
-    // Save the Huffman codes (metadata)
-    file << huffmanCodes.size() << "\n";
+    uint16_t codeCount = huffmanCodes.size();
+    file.write(reinterpret_cast<char*>(&codeCount), sizeof(codeCount));
+
     for (const auto& pair : huffmanCodes) {
-        file << pair.first << " " << pair.second << "\n";
+        int16_t value = pair.first;
+        uint8_t codeLength = pair.second.size();
+        file.write(reinterpret_cast<char*>(&value), sizeof(value));
+        file.write(reinterpret_cast<char*>(&codeLength), sizeof(codeLength));
+        file.write(pair.second.data(), codeLength);
     }
 
     // Save the encoded data
-    file << encodedData;
+    uint8_t buffer = 0;
+    int bitCount = 0;
+
+    for (char bit : encodedData) {
+        buffer = (buffer << 1) | (bit - '0');
+        ++bitCount;
+
+        if (bitCount == 8) {
+            file.put(buffer);
+            buffer = 0;
+            bitCount = 0;
+        }
+    }
+
+    if (bitCount > 0) { // Flush remaining bits
+        buffer <<= (8 - bitCount);
+        file.put(buffer);
+    }
 
     file.close();
 }
@@ -333,19 +388,42 @@ int main() {
         std::cout << "Discrete Cosine Transform (DCT) applied to all blocks." << std::endl;
 
         // Step 6: Quantize the blocks
-        std::vector<int> quantTable = { 
-            16, 11, 10, 16, 24, 40, 51, 61,
-            12, 12, 14, 19, 26, 58, 60, 55,
-            14, 13, 16, 24, 40, 57, 69, 56,
-            14, 17, 22, 29, 51, 87, 80, 62,
-            18, 22, 37, 56, 68, 109, 103, 77,
-            24, 35, 55, 64, 81, 104, 113, 92,
-            49, 64, 78, 87, 103, 121, 120, 101,
-            72, 92, 95, 98, 112, 100, 103, 99
-        };
-        for (auto& block : yBlocks) quantize(block, quantTable);
-        for (auto& block : cbBlocks) quantize(block, quantTable);
-        for (auto& block : crBlocks) quantize(block, quantTable);
+
+        // std::vector<int> quantTable = { 16,11,12,14,12,10,16,14,
+        //         13,14,18,17,16,19,24,40,
+        //         26,24,22,22,24,49,35,37,
+        //         29,40,58,51,61,60,57,51,
+        //         56,55,64,72,92,78,64,68,
+        //         87,69,55,56,80,109,81,87,
+        //         95,98,103,104,103,62,77,113,
+        //         121,112,100,120,92,101,103,99 };
+
+        // std::vector<int> quantTableAggressive = {
+        //         32, 22, 20, 32, 48, 80, 102, 122,
+        //         24, 24, 28, 38, 52, 116, 120, 110,
+        //         28, 27, 32, 46, 72, 114, 130, 112,
+        //         28, 34, 44, 58, 92, 174, 160, 124,
+        //         36, 44, 74, 112, 136, 218, 206, 154,
+        //         48, 70, 110, 128, 162, 208, 226, 184,
+        //         98, 128, 156, 174, 206, 242, 240, 202,
+        //         144, 184, 190, 196, 224, 200, 206, 198
+        //         };
+
+        std::vector<int> quantTableExtremelyAggressive = {
+                64, 48, 40, 64, 96, 160, 204, 244,
+                48, 48, 56, 76, 104, 232, 240, 220,
+                56, 52, 64, 92, 144, 228, 260, 224,
+                56, 68, 88, 116, 184, 348, 320, 248,
+                72, 88, 148, 224, 272, 436, 412, 308,
+                96, 140, 220, 256, 324, 416, 452, 368,
+                196, 256, 312, 348, 412, 484, 480, 404,
+                288, 368, 380, 392, 448, 400, 412, 396
+            };
+
+
+        for (auto& block : yBlocks) quantize(block, quantTableExtremelyAggressive);
+        for (auto& block : cbBlocks) quantize(block, quantTableExtremelyAggressive);
+        for (auto& block : crBlocks) quantize(block, quantTableExtremelyAggressive);
         std::cout << "Quantization completed." << std::endl;
 
         // Combine all blocks for compression
