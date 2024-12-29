@@ -139,54 +139,29 @@ Discrete Cosine Transform (DCT):
 
 Implementing the DCT using the standard formula.
 */
+
 void applyDCT(std::vector<int>& block) {
-    double c[8][8];
-    double pi = acos(-1);
-
-    for (int u = 0; u < 8; ++u) {
-        for (int v = 0; v < 8; ++v) {
-            c[u][v] = (u == 0 ? 1 / sqrt(2) : 1.0) * (v == 0 ? 1 / sqrt(2) : 1.0);
-            c[u][v] *= cos((2 * u + 1) * pi / 16.0) * cos((2 * v + 1) * pi / 16.0);
-        }
-    }
-
-    std::vector<int> temp(64);
+    std::vector<double> temp(64);
     for (int u = 0; u < 8; ++u) {
         for (int v = 0; v < 8; ++v) {
             double sum = 0;
-            for (int x = 0; x < 8; ++x) {
-                for (int y = 0; y < 8; ++y) {
-                    sum += block[x * 8 + y] * c[u][x] * c[v][y];
+            for (int x = 0; x < 8; x++) {
+                for (int y = 0; y < 8; y++) {
+                    double coeff = block[y * 8 + x];
+                    sum += coeff * cos(((2 * x + 1) * u * M_PI) / 16.0) *
+                           cos(((2 * y + 1) * v * M_PI) / 16.0);
                 }
             }
-            temp[u * 8 + v] = static_cast<int>(round(sum));
+            double cu = (u == 0) ? 1 / sqrt(2.0) : 1.0;
+            double cv = (v == 0) ? 1 / sqrt(2.0) : 1.0;
+            temp[u * 8 + v] = 0.25 * cu * cv * sum;
         }
     }
-
-    block = temp;
+    for (int i = 0; i < 64; ++i) {
+        block[i] = round(temp[i]);
+    }
 }
 
-// void applyDCT(std::vector<int>& block) {
-//     std::vector<double> temp(64);
-//     for (int u = 0; u < 8; ++u) {
-//         for (int v = 0; v < 8; ++v) {
-//             double sum = 0;
-//             for (int x = 0; x < 8; ++x) {
-//                 for (int y = 0; y < 8; ++y) {
-//                     double coeff = block[y * 8 + x];
-//                     sum += coeff * cos(((2 * x + 1) * u * M_PI) / 16.0) *
-//                            cos(((2 * y + 1) * v * M_PI) / 16.0);
-//                 }
-//             }
-//             double cu = (u == 0) ? 1 / sqrt(2.0) : 1.0;
-//             double cv = (v == 0) ? 1 / sqrt(2.0) : 1.0;
-//             temp[u * 8 + v] = 0.25 * cu * cv * sum;
-//         }
-//     }
-//     for (int i = 0; i < 64; ++i) {
-//         block[i] = round(temp[i]);
-//     }
-// }
 
 /*
 Quantization:
@@ -355,91 +330,91 @@ void compressJPEG(const std::vector<std::vector<int>>& quantizedBlocks, const st
 
 
 int main() {
-    std::cout << "Starting JPEG compression..." << std::endl;
 
-    // Input and output file paths
-    std::string inputFile = "Images/test2.jpeg";  
-    std::string outputFile = "output.jc"; 
+    // std::cout << "Starting JPEG compression..." << std::endl;
 
-    try {
-        // Step 1: Load the image
-        Image img = loadImage(inputFile);
-        std::cout << "Image loaded successfully: " << img.width << "x" << img.height << std::endl;
+    // // Input and output file paths
+    // std::string inputFile = "Images/test2.jpeg";  
+    // std::string outputFile = "output.jc"; 
 
-        // Step 2: Convert to YCbCr color space
-        YCbCr ycbcr = rgbToYCbCr(img);
-        std::cout << "Color space conversion completed." << std::endl;
+    // try {
+    //     // Step 1: Load the image
+    //     Image img = loadImage(inputFile);
+    //     std::cout << "Image loaded successfully: " << img.width << "x" << img.height << std::endl;
 
-        // Step 3: Subsample the chrominance channels
-        std::vector<uint8_t> subsampledCb = subsampleChannel(ycbcr.Cb, img.width, img.height);
-        std::vector<uint8_t> subsampledCr = subsampleChannel(ycbcr.Cr, img.width, img.height);
-        std::cout << "Subsampling completed." << std::endl;
+    //     // Step 2: Convert to YCbCr color space
+    //     YCbCr ycbcr = rgbToYCbCr(img);
+    //     std::cout << "Color space conversion completed." << std::endl;
 
-        // Step 4: Split channels into 8x8 blocks
-        auto yBlocks = splitIntoBlocks(ycbcr.Y, img.width, img.height);
-        auto cbBlocks = splitIntoBlocks(subsampledCb, img.width / 2, img.height / 2);
-        auto crBlocks = splitIntoBlocks(subsampledCr, img.width / 2, img.height / 2);
-        std::cout << "Block splitting completed." << std::endl;
+    //     // Step 3: Subsample the chrominance channels
+    //     std::vector<uint8_t> subsampledCb = subsampleChannel(ycbcr.Cb, img.width, img.height);
+    //     std::vector<uint8_t> subsampledCr = subsampleChannel(ycbcr.Cr, img.width, img.height);
+    //     std::cout << "Subsampling completed." << std::endl;
 
-        // Step 5: Apply DCT to each block
-        for (auto& block : yBlocks) applyDCT(block);
-        for (auto& block : cbBlocks) applyDCT(block);
-        for (auto& block : crBlocks) applyDCT(block);
-        std::cout << "Discrete Cosine Transform (DCT) applied to all blocks." << std::endl;
+    //     // Step 4: Split channels into 8x8 blocks
+    //     auto yBlocks = splitIntoBlocks(ycbcr.Y, img.width, img.height);
+    //     auto cbBlocks = splitIntoBlocks(subsampledCb, img.width / 2, img.height / 2);
+    //     auto crBlocks = splitIntoBlocks(subsampledCr, img.width / 2, img.height / 2);
+    //     std::cout << "Block splitting completed." << std::endl;
 
-        // Step 6: Quantize the blocks
+    //     // Step 5: Apply DCT to each block
+    //     for (auto& block : yBlocks) applyDCT(block);
+    //     for (auto& block : cbBlocks) applyDCT(block);
+    //     for (auto& block : crBlocks) applyDCT(block);
+    //     std::cout << "Discrete Cosine Transform (DCT) applied to all blocks." << std::endl;
 
-        // std::vector<int> quantTable = { 16,11,12,14,12,10,16,14,
-        //         13,14,18,17,16,19,24,40,
-        //         26,24,22,22,24,49,35,37,
-        //         29,40,58,51,61,60,57,51,
-        //         56,55,64,72,92,78,64,68,
-        //         87,69,55,56,80,109,81,87,
-        //         95,98,103,104,103,62,77,113,
-        //         121,112,100,120,92,101,103,99 };
+    //     // Step 6: Quantize the blocks
 
-        // std::vector<int> quantTableAggressive = {
-        //         32, 22, 20, 32, 48, 80, 102, 122,
-        //         24, 24, 28, 38, 52, 116, 120, 110,
-        //         28, 27, 32, 46, 72, 114, 130, 112,
-        //         28, 34, 44, 58, 92, 174, 160, 124,
-        //         36, 44, 74, 112, 136, 218, 206, 154,
-        //         48, 70, 110, 128, 162, 208, 226, 184,
-        //         98, 128, 156, 174, 206, 242, 240, 202,
-        //         144, 184, 190, 196, 224, 200, 206, 198
-        //         };
+    //     std::vector<int> quantTable = { 16,11,12,14,12,10,16,14,
+    //             13,14,18,17,16,19,24,40,
+    //             26,24,22,22,24,49,35,37,
+    //             29,40,58,51,61,60,57,51,
+    //             56,55,64,72,92,78,64,68,
+    //             87,69,55,56,80,109,81,87,
+    //             95,98,103,104,103,62,77,113,
+    //             121,112,100,120,92,101,103,99 };
 
-        std::vector<int> quantTableExtremelyAggressive = {
-                64, 48, 40, 64, 96, 160, 204, 244,
-                48, 48, 56, 76, 104, 232, 240, 220,
-                56, 52, 64, 92, 144, 228, 260, 224,
-                56, 68, 88, 116, 184, 348, 320, 248,
-                72, 88, 148, 224, 272, 436, 412, 308,
-                96, 140, 220, 256, 324, 416, 452, 368,
-                196, 256, 312, 348, 412, 484, 480, 404,
-                288, 368, 380, 392, 448, 400, 412, 396
-            };
+    //     // std::vector<int> quantTableAggressive = {
+    //     //         32, 22, 20, 32, 48, 80, 102, 122,
+    //     //         24, 24, 28, 38, 52, 116, 120, 110,
+    //     //         28, 27, 32, 46, 72, 114, 130, 112,
+    //     //         28, 34, 44, 58, 92, 174, 160, 124,
+    //     //         36, 44, 74, 112, 136, 218, 206, 154,
+    //     //         48, 70, 110, 128, 162, 208, 226, 184,
+    //     //         98, 128, 156, 174, 206, 242, 240, 202,
+    //     //         144, 184, 190, 196, 224, 200, 206, 198
+    //     //         };
 
+    //     // std::vector<int> quantTableExtremelyAggressive = {
+    //     //         64, 48, 40, 64, 96, 160, 204, 244,
+    //     //         48, 48, 56, 76, 104, 232, 240, 220,
+    //     //         56, 52, 64, 92, 144, 228, 260, 224,
+    //     //         56, 68, 88, 116, 184, 348, 320, 248,
+    //     //         72, 88, 148, 224, 272, 436, 412, 308,
+    //     //         96, 140, 220, 256, 324, 416, 452, 368,
+    //     //         196, 256, 312, 348, 412, 484, 480, 404,
+    //     //         288, 368, 380, 392, 448, 400, 412, 396
+    //     //     };
 
-        for (auto& block : yBlocks) quantize(block, quantTableExtremelyAggressive);
-        for (auto& block : cbBlocks) quantize(block, quantTableExtremelyAggressive);
-        for (auto& block : crBlocks) quantize(block, quantTableExtremelyAggressive);
-        std::cout << "Quantization completed." << std::endl;
+    //     for (auto& block : yBlocks) quantize(block, quantTable);
+    //     for (auto& block : cbBlocks) quantize(block, quantTable);
+    //     for (auto& block : crBlocks) quantize(block, quantTable);
+    //     std::cout << "Quantization completed." << std::endl;
 
-        // Combine all blocks for compression
-        std::vector<std::vector<int>> allBlocks = yBlocks;
-        allBlocks.insert(allBlocks.end(), cbBlocks.begin(), cbBlocks.end());
-        allBlocks.insert(allBlocks.end(), crBlocks.begin(), crBlocks.end());
+    //     // Combine all blocks for compression
+    //     std::vector<std::vector<int>> allBlocks = yBlocks;
+    //     allBlocks.insert(allBlocks.end(), cbBlocks.begin(), cbBlocks.end());
+    //     allBlocks.insert(allBlocks.end(), crBlocks.begin(), crBlocks.end());
 
-        std::cout << "Combined successfully" << std::endl;
+    //     std::cout << "Combined successfully" << std::endl;
 
-        // Step 7: Compress the blocks
-        compressJPEG(allBlocks, outputFile);
+    //     // Step 7: Compress the blocks
+    //     compressJPEG(allBlocks, outputFile);
 
-        std::cout << "JPEG compression completed successfully." << std::endl;
-    } catch (const std::exception& e) {
-        std::cerr << "An error occurred: " << e.what() << std::endl;
-    }
+    //     std::cout << "JPEG compression completed successfully." << std::endl;
+    // } catch (const std::exception& e) {
+    //     std::cerr << "An error occurred: " << e.what() << std::endl;
+    // }
 
     return 0;
 }
