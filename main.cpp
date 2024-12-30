@@ -1,5 +1,6 @@
 // main.cpp
 #include "FileTypeValidator.h"
+#include "CompressJpeg.h"
 #include <iostream>
 
 int main(int argc, char* argv[]) {
@@ -14,6 +15,9 @@ int main(int argc, char* argv[]) {
 
     std::string filePath = argv[1];
     std::string fileTypeStr = argv[2];
+    std::string outputFilePath = "output.jc";
+    int quality;
+
     FileType expectedType;
 
     // Map string input to FileType enum
@@ -40,6 +44,16 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    bool success = compressJpeg(filePath, outputFilePath , quality);
+
+    if (success) {
+        std::cout << "The file has been compressed" << std::endl;
+    }
+    else{
+        std::cout << "There was an error " << std::endl;
+    }
+
+
     return 0;
 }
 
@@ -48,6 +62,8 @@ int main(int argc, char* argv[]) {
 // g++ -std=c++11 -o main main.cpp FileTypeValidator.cpp
 // g++ -std=c++14 -o main main.cpp FileTypeValidator.cpp
 
-// ./main /Users/devansh/File-Compressor/Images/test2.jpeg jpeg
+// g++ -std=c++11 -o main main.cpp FileTypeValidator.cpp CompressJpeg.cpp
+
+// ./main /Users/devansh/File-Compressor/Images/test4.jpeg jpeg
 
 // ./main /Users/devansh/File-Compressor/Images/test3.test jpeg [SHOULD BE A VAILD JPEG as it is renamed from test2]
