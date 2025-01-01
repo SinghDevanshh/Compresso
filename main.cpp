@@ -58,11 +58,10 @@ int main(int argc, char* argv[]) {
 }
 
 
-// Commands to run file on bash (can pick either one)
-// g++ -std=c++11 -o main main.cpp FileTypeValidator.cpp
-// g++ -std=c++14 -o main main.cpp FileTypeValidator.cpp
 
-// g++ -std=c++11 -o main main.cpp FileTypeValidator.cpp CompressJpeg.cpp
+// Commands to run file on bash (can pick either one)
+//  g++ -std=c++11 -o main main.cpp FileTypeValidator.cpp CompressJpeg.cpp
+//  g++ -std=c++14 -o main main.cpp FileTypeValidator.cpp CompressJpeg.cpp
 
 // ./main /Users/devansh/File-Compressor/Images/test4.jpeg jpeg
 
