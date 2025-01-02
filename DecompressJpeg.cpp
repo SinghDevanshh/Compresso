@@ -8,112 +8,275 @@ Decompression is implemented by reversing the compression steps:
     > Convert to RGB: Convert from YCbCr back to RGB.
 */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <iostream>
+#include <vector>
+#include <cmath>
+#include <cstdint>
+#include <queue>
+#include <map>
+#include <string>
+#include <fstream>
 
-// Some other iimplementations for DCT and similarly IDCT
+#define STB_IMAGE_IMPLEMENTATION
+#include "lib/stb_image.h"
 
-// float **calloc_mat(int dimX, int dimY){
-//     float **m = (float**) calloc(dimX, sizeof(float*));
-//     float *p = (float*) calloc(dimX*dimY, sizeof(float));
-//     int i;
-//     for(i=0; i <dimX;i++){
-//     m[i] = &p[i*dimY];
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "lib/stb_image_write.h"
 
-//     }
-//    return m;
-// }
+// Define Node data structure for Huffman tree
+struct Node {
+    int value;
+    Node* left;
+    Node* right;
 
-// void applyDCT(float **DCTMatrix , float **blocks){
-    
-//     int i, j, u, v;
-//     for (u = 0; u < 8; ++u) {
-//         for (v = 0; v < 8; ++v) {
-//         DCTMatrix[u][v] = 0;
-//             for (i = 0; i < 8; i++) {
-//                 for (j = 0; j < 8; j++) {
-//                     DCTMatrix[u][v] += round(blocks[i][j] * cos(M_PI/((float)8)*(i+1./2.)*u)*cos(M_PI/((float)8)*(j+1./2.)*v));
-//                 }               
-//             }
-//         }
-//     }  
-// }
+    Node(int v) : value(v), left(nullptr), right(nullptr) {}
+};
 
-// void idct(float **Matrix, float **DCTMatrix, int N, int M){
-//     int i, j, u, v;
-
-//     for (u = 0; u < N; ++u) {
-//         for (v = 0; v < M; ++v) {
-//             Matrix[u][v] = 1/4.*DCTMatrix[0][0];
-//             for(i = 1; i < N; i++){
-//                 Matrix[u][v] += 1/2.*DCTMatrix[i][0];
-//             }
-//             for(j = 1; j < M; j++){
-//                 Matrix[u][v] += 1/2.*DCTMatrix[0][j];
-//             }
-
-//             for (i = 1; i < N; i++) {
-//                 for (j = 1; j < M; j++) {
-//                     Matrix[u][v] += DCTMatrix[i][j] * cos(M_PI/((float)N)*(u+1./2.)*i)*cos(M_PI/((float)M)*(v+1./2.)*j);
-//                     }               
-//                 }
-//             Matrix[u][v] *= 2./((float)N)*2./((float)M);
-//             }
-//         }  
-//     }
-
-// Test for DCT 
+// Helper clamp function
+int clamp(int value, int minVal, int maxVal) {
+    return (value < minVal) ? minVal : (value > maxVal ? maxVal : value);
+}
 
 
-        // float **DCTMatrix = calloc_mat(8, 8);
-        
-        // float    
-        // testBlockA[8][8] = { {255, 255, 255, 255, 255, 255, 255, 255},
-        //                  {255, 255, 255, 255, 255, 255, 255, 255},
-        //                  {255, 255, 255, 255, 255, 255, 255, 255},
-        //                  {255, 255, 255, 255, 255, 255, 255, 255},
-        //                  {255, 255, 255, 255, 255, 255, 255, 255},
-        //                  {255, 255, 255, 255, 255, 255, 255, 255},
-        //                  {255, 255, 255, 255, 255, 255, 255, 255},
-        //                  {255, 255, 255, 255, 255, 255, 255, 255} };
-        // float **testBlock = calloc_mat(8, 8);
-        // for(int i = 0; i<8; i++){
-        //     for(int j = 0; j<8; j++){
-        //     testBlock[i][j] = yBlocks[i][j];
-        //     }
-        // }
-        // applyDCT(DCTMatrix,testBlock);
+// Function to load the Huffman tree from the file
+Node* loadHuffmanTree(std::ifstream& file) {
+    if (!file.good()) return nullptr; // Ensure the file stream is valid
 
-        // for (int i = 0; i < 8; ++i) {
-        //     for (int j = 0; j < 8; ++j) {
-        //         std::cout << DCTMatrix[i][j] << " ";
-        //     }
-        //     std::cout << std::endl;
-        // }
+    char isLeaf;
+    if (!file.get(isLeaf)) { // Read leaf indicator and check for success
+        return nullptr;
+    }
 
-        // std::cout << "Original Block:" << std::endl;
-        // auto block = yBlocks[0];
-        // for (int i = 0; i < 8; ++i) {
-        //     for (int j = 0; j < 8; ++j) {
-        //         std::cout << block[i * 8 + j] << " ";
-        //     }
-        //     std::cout << std::endl;
-        // }
-        // applyDCT2(block);
+    if (isLeaf == 1) { // Leaf node
+        int value;
+        if (!file.read(reinterpret_cast<char*>(&value), sizeof(value))) { // Read the value
+            throw std::runtime_error("Failed to read leaf node value.");
+        }
+        return new Node(value);
+    }
 
-        // std::cout << "DCT Transformed Block:" << std::endl;
-        // for (int i = 0; i < 8; ++i) {
-        //     for (int j = 0; j < 8; ++j) {
-        //         std::cout << block[i * 8 + j] << " ";
-        //     }
-        //     std::cout << std::endl;
-        // }
+    // Internal node
+    Node* node = new Node(-1); // -1 indicates internal node
 
-        // std::vector<int> testBlock(64, 10);
-        // applyDCT2(testBlock);
+    // Recursively load left and right children
+    node->left = loadHuffmanTree(file);
+    node->right = loadHuffmanTree(file);
 
-        // std::cout << "DCT Coefficients for Uniform Block:" << std::endl;
-        // for (int i = 0; i < 8; ++i) {
-        //     for (int j = 0; j < 8; ++j) {
-        //         std::cout << testBlock[i * 8 + j] << " ";
-        //     }
-        //     std::cout << std::endl;
-        // }
+    return node;
+}
+
+
+
+// Function to decode the Huffman encoded data
+std::vector<int> decodeHuffmanData(std::ifstream& file, Node* root) {
+    std::vector<int> coefficients;
+    Node* current = root;
+
+    char byte;
+    while (file.get(byte)) {
+        for (int bit = 7; bit >= 0; --bit) {
+            bool isRight = (byte >> bit) & 1;
+            current = isRight ? current->right : current->left;
+
+            if (!current->left && !current->right) { // Leaf node
+                coefficients.push_back(current->value);
+                current = root; // Reset to root for next symbol
+            }
+        }
+    }
+
+    return coefficients;
+}
+
+
+// Function to dequantize the coefficients
+void dequantize(std::vector<int>& block, const std::vector<int>& quantTable) {
+    for (size_t i = 0; i < block.size(); ++i) {
+        block[i] *= quantTable[i];
+    }
+}
+
+
+// Function to apply IDCT to an 8x8 block
+void applyIDCT(std::vector<int>& block) {
+    std::vector<double> temp(64);
+    for (int x = 0; x < 8; ++x) {
+        for (int y = 0; y < 8; ++y) {
+            double sum = 0;
+            for (int u = 0; u < 8; ++u) {
+                for (int v = 0; v < 8; ++v) {
+                    double cu = (u == 0) ? 1 / sqrt(2.0) : 1.0;
+                    double cv = (v == 0) ? 1 / sqrt(2.0) : 1.0;
+                    sum += cu * cv * block[u * 8 + v] *
+                           cos(((2 * x + 1) * u * M_PI) / 16.0) *
+                           cos(((2 * y + 1) * v * M_PI) / 16.0);
+                }
+            }
+            temp[y * 8 + x] = 0.25 * sum;
+        }
+    }
+
+    for (int i = 0; i < 64; ++i) {
+        block[i] = std::round(temp[i]);
+    }
+}
+
+
+// Function to Reconstruct the Image
+std::vector<uint8_t> reconstructImage(const std::vector<std::vector<int>>& yBlocks, 
+                                      const std::vector<std::vector<int>>& cbBlocks, 
+                                      const std::vector<std::vector<int>>& crBlocks, 
+                                      int width, int height) {
+    std::vector<uint8_t> reconstructed(width * height * 3); // RGB data
+
+    // Combine blocks into the full-resolution image
+    int blockIndex = 0;
+    for (int yBlock = 0; yBlock < height; yBlock += 8) {
+        for (int xBlock = 0; xBlock < width; xBlock += 8) {
+            const auto& yBlockData = yBlocks[blockIndex];
+            const auto& cbBlockData = cbBlocks[blockIndex / 4]; // 4:2:0 subsampling
+            const auto& crBlockData = crBlocks[blockIndex / 4];
+
+            for (int dy = 0; dy < 8; ++dy) {
+                for (int dx = 0; dx < 8; ++dx) {
+                    int x = xBlock + dx;
+                    int y = yBlock + dy;
+                    if (x < width && y < height) {
+                        int pixelIndex = (y * width + x) * 3;
+
+                        int Y = yBlockData[dy * 8 + dx];
+                        int Cb = cbBlockData[(dy / 2) * 4 + (dx / 2)]; // Subsampled
+                        int Cr = crBlockData[(dy / 2) * 4 + (dx / 2)]; // Subsampled
+
+                        // Convert YCbCr to RGB
+                        int R = clamp(static_cast<int>(Y + 1.402 * (Cr - 128)), 0, 255);
+                        int G = clamp(static_cast<int>(Y - 0.344136 * (Cb - 128) - 0.714136 * (Cr - 128)), 0, 255);
+                        int B = clamp(static_cast<int>(Y + 1.772 * (Cb - 128)), 0, 255);
+
+                        reconstructed[pixelIndex] = R;
+                        reconstructed[pixelIndex + 1] = G;
+                        reconstructed[pixelIndex + 2] = B;
+                    }
+                }
+            }
+
+            ++blockIndex;
+        }
+    }
+
+    return reconstructed;
+}
+
+
+void saveImage(const std::string& outputPath, const std::vector<uint8_t>& imageData, int width, int height) {
+    if (!stbi_write_png(outputPath.c_str(), width, height, 3, imageData.data(), width * 3)) {
+        throw std::runtime_error("Failed to save the image.");
+    }
+}
+
+
+
+
+// Main decompression function
+void decompressJPEG(const std::string& inputFile, const std::string& outputFile) {
+    std::ifstream file(inputFile, std::ios::binary);
+    if (!file) throw std::runtime_error("Failed to open input file.");
+
+    // Step 1: Load Huffman tree
+    Node* huffmanTree = loadHuffmanTree(file);
+    if (!huffmanTree) throw std::runtime_error("Failed to load Huffman tree.");
+
+    std::cout << "Succes 2" << std::endl;
+
+    // Step 2: Decode Huffman data
+    auto coefficients = decodeHuffmanData(file, huffmanTree);
+
+    std::cout << "Succes 3" << std::endl;
+
+    // Step 3: Dequantize and apply IDCT
+    std::vector<int> quantTable = { 16,11,12,14,12,10,16,14,
+                13,14,18,17,16,19,24,40,
+                26,24,22,22,24,49,35,37,
+                29,40,58,51,61,60,57,51,
+                56,55,64,72,92,78,64,68,
+                87,69,55,56,80,109,81,87,
+                95,98,103,104,103,62,77,113,
+                121,112,100,120,92,101,103,99 };
+
+    std::vector<std::vector<int>> yBlocks, cbBlocks, crBlocks;
+    size_t totalBlocks = coefficients.size() / 64;
+    size_t cbCrBlockCount = totalBlocks / 4;
+        for (size_t i = 0; i < totalBlocks; ++i) {
+        std::vector<int> block(coefficients.begin() + i * 64, coefficients.begin() + (i + 1) * 64);
+        dequantize(block, quantTable);
+        applyIDCT(block);
+        if (i < totalBlocks / 2) {
+            yBlocks.push_back(block);
+        } else if (i < totalBlocks / 2 + cbCrBlockCount) {
+            cbBlocks.push_back(block);
+        } else {
+            crBlocks.push_back(block);
+        }
+    }
+
+    // Step 4: Reconstruct the image
+    int width = 2426;
+    int height = 3032;
+    auto reconstructedImage = reconstructImage(yBlocks, cbBlocks, crBlocks, width, height);
+
+    // Step 5: Save the decompressed image
+    saveImage(outputFile, reconstructedImage, width, height);
+
+    file.close();
+    std::cout << "Decompression completed. Output saved to " << outputFile << std::endl;
+}
+
+void verifyCompressedFile(const std::string& filePath) {
+    std::ifstream file(filePath, std::ios::binary);
+    if (!file) {
+        std::cerr << "Failed to open file." << std::endl;
+        return;
+    }
+
+    // Verify the Huffman tree
+    std::cout << "Verifying Huffman Tree..." << std::endl;
+    char isLeaf;
+    while (file.get(isLeaf)) {
+        if (isLeaf != 0 && isLeaf != 1) {
+            std::cerr << "Invalid isLeaf value: " << static_cast<int>(isLeaf) << std::endl;
+            return;
+        }
+
+        if (isLeaf == 1) { // Leaf node
+            int value;
+            if (!file.read(reinterpret_cast<char*>(&value), sizeof(value))) {
+                std::cerr << "Failed to read leaf node value." << std::endl;
+                return;
+            }
+            std::cout << "Leaf Node: Value = " << value << std::endl;
+        } else { // Internal node
+            std::cout << "Internal Node." << std::endl;
+        }
+    }
+
+    std::cout << "File verified successfully up to the end of the Huffman tree." << std::endl;
+}
+
+
+// Main function
+int main() {
+    std::string inputFile = "output.jc";
+    std::string outputFile = "decompressed.jpeg";
+
+    // try {
+    //     decompressJPEG(inputFile, outputFile);
+    // } catch (const std::exception& e) {
+    //     std::cerr << "Error: " << e.what() << std::endl;
+    // }
+
+    verifyCompressedFile(inputFile);
+
+    return 0;
+}

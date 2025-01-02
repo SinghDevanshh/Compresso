@@ -338,7 +338,7 @@ bool compressJpeg(const std::string& inputPath, const std::string& outputPath, i
     std::cout << "Starting JPEG compression..." << std::endl;
 
     // Input and output file paths
-    std::string inputFile = "Images/test4.jpeg";  
+    std::string inputFile = "Images/testSmall.jpeg";  
     std::string outputFile = "output.jc"; 
 
     try {
