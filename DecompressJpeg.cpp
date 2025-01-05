@@ -200,6 +200,10 @@ void decompressJPEG(const std::string& inputFile, const std::string& outputFile)
     // Step 2: Decode Huffman data
     auto coefficients = decodeHuffmanData(file, huffmanTree);
 
+    // for (int i=0 ; i < coefficients.size() ; i++){
+    //     std::cout << coefficients[i] << std::endl;
+    // }
+
     // Step 3: Dequantize and apply IDCT
     std::vector<int> quantTable = { 16,11,12,14,12,10,16,14,
                 13,14,18,17,16,19,24,40,
@@ -212,6 +216,9 @@ void decompressJPEG(const std::string& inputFile, const std::string& outputFile)
 
     std::vector<std::vector<int>> yBlocks, cbBlocks, crBlocks;
     size_t totalBlocks = coefficients.size() / 64;
+
+    // Size of all blocks in compress is 963 and here total blocks has a size of 955
+
     size_t cbCrBlockCount = totalBlocks / 4;
         for (size_t i = 0; i < totalBlocks; ++i) {
         std::vector<int> block(coefficients.begin() + i * 64, coefficients.begin() + (i + 1) * 64);
@@ -225,6 +232,21 @@ void decompressJPEG(const std::string& inputFile, const std::string& outputFile)
             crBlocks.push_back(block);
         }
     }
+
+    // yBlocks Size should be 625 * 64 matrix with 14 as the first column and rest as 0
+
+    // std::cout << yBlocks.size() << std::endl;
+    // std::cout << yBlocks[1].size() << std::endl;
+
+    // for(int a = 0; a < yBlocks.size(); a++)
+    // {
+    //     for(int b = 0; b < yBlocks[a].size(); b++)
+    //     {
+    //     std::cout << yBlocks[a][b] << " ";
+    //     }
+    //     std::cout << std::endl;
+    // }  
+
 
     // Step 4: Reconstruct the image
     int width = 200;

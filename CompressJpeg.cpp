@@ -283,9 +283,7 @@ void saveEncodedData(const std::string& encodedData, Node* huffmanTree, const st
     // Step 1: Save Huffman tree in compact format
     saveHuffmanTree(huffmanTree, file);
 
-    // To ensure clear separation between the Huffman tree and encoded data
-    const char marker[] = "T";
-    file.write(marker, sizeof(marker));
+    // To ensure clear separation between the Huffman tree and encoded data maybe use a end tree marker
 
     // Step 2: Save encoded data with optimized bit packing
     uint64_t buffer = 0;
