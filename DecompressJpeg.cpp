@@ -123,18 +123,22 @@ void applyIDCT(std::vector<int>& block) {
     }
 }
 
-
-// Function to Reconstruct the Image
 std::vector<uint8_t> reconstructImage(const std::vector<std::vector<int>>& yBlocks, 
                                       const std::vector<std::vector<int>>& cbBlocks, 
                                       const std::vector<std::vector<int>>& crBlocks, 
                                       int width, int height) {
     std::vector<uint8_t> reconstructed(width * height * 3); // RGB data
 
-    // Combine blocks into the full-resolution image
     int blockIndex = 0;
     for (int yBlock = 0; yBlock < height; yBlock += 8) {
         for (int xBlock = 0; xBlock < width; xBlock += 8) {
+            if (blockIndex >= yBlocks.size() || blockIndex / 4 >= cbBlocks.size() || blockIndex / 4 >= crBlocks.size()) {
+                std::cerr << "Block index out of bounds: " << blockIndex << std::endl;
+                std::cerr << "yBlocks size: " << yBlocks.size() << ", cbBlocks size: " << cbBlocks.size()
+                          << ", crBlocks size: " << crBlocks.size() << std::endl;
+                return reconstructed;
+            }
+
             const auto& yBlockData = yBlocks[blockIndex];
             const auto& cbBlockData = cbBlocks[blockIndex / 4]; // 4:2:0 subsampling
             const auto& crBlockData = crBlocks[blockIndex / 4];
@@ -143,21 +147,27 @@ std::vector<uint8_t> reconstructImage(const std::vector<std::vector<int>>& yBloc
                 for (int dx = 0; dx < 8; ++dx) {
                     int x = xBlock + dx;
                     int y = yBlock + dy;
+
                     if (x < width && y < height) {
                         int pixelIndex = (y * width + x) * 3;
+
+                        if ((dy / 2) * 4 + (dx / 2) >= cbBlockData.size() || (dy / 2) * 4 + (dx / 2) >= crBlockData.size()) {
+                            std::cerr << "Subsampling index out of bounds for block index: " << blockIndex << std::endl;
+                            continue; // Skip this pixel
+                        }
 
                         int Y = yBlockData[dy * 8 + dx];
                         int Cb = cbBlockData[(dy / 2) * 4 + (dx / 2)]; // Subsampled
                         int Cr = crBlockData[(dy / 2) * 4 + (dx / 2)]; // Subsampled
 
                         // Convert YCbCr to RGB
-                        int R = clamp(static_cast<int>(Y + 1.402 * (Cr - 128)), 0, 255);
-                        int G = clamp(static_cast<int>(Y - 0.344136 * (Cb - 128) - 0.714136 * (Cr - 128)), 0, 255);
-                        int B = clamp(static_cast<int>(Y + 1.772 * (Cb - 128)), 0, 255);
+                        int R = std::max(0, std::min(255, static_cast<int>(Y + 1.402 * (Cr - 128))));
+                        int G = std::max(0, std::min(255, static_cast<int>(Y - 0.344136 * (Cb - 128) - 0.714136 * (Cr - 128))));
+                        int B = std::max(0, std::min(255, static_cast<int>(Y + 1.772 * (Cb - 128))));
 
-                        reconstructed[pixelIndex] = R;
-                        reconstructed[pixelIndex + 1] = G;
-                        reconstructed[pixelIndex + 2] = B;
+                        reconstructed[pixelIndex] = static_cast<uint8_t>(R);
+                        reconstructed[pixelIndex + 1] = static_cast<uint8_t>(G);
+                        reconstructed[pixelIndex + 2] = static_cast<uint8_t>(B);
                     }
                 }
             }
@@ -170,13 +180,12 @@ std::vector<uint8_t> reconstructImage(const std::vector<std::vector<int>>& yBloc
 }
 
 
+
 void saveImage(const std::string& outputPath, const std::vector<uint8_t>& imageData, int width, int height) {
     if (!stbi_write_png(outputPath.c_str(), width, height, 3, imageData.data(), width * 3)) {
         throw std::runtime_error("Failed to save the image.");
     }
 }
-
-
 
 
 // Main decompression function
@@ -188,12 +197,8 @@ void decompressJPEG(const std::string& inputFile, const std::string& outputFile)
     Node* huffmanTree = loadHuffmanTree(file);
     if (!huffmanTree) throw std::runtime_error("Failed to load Huffman tree.");
 
-    std::cout << "Succes 2" << std::endl;
-
     // Step 2: Decode Huffman data
     auto coefficients = decodeHuffmanData(file, huffmanTree);
-
-    std::cout << "Succes 3" << std::endl;
 
     // Step 3: Dequantize and apply IDCT
     std::vector<int> quantTable = { 16,11,12,14,12,10,16,14,
@@ -222,8 +227,8 @@ void decompressJPEG(const std::string& inputFile, const std::string& outputFile)
     }
 
     // Step 4: Reconstruct the image
-    int width = 2426;
-    int height = 3032;
+    int width = 200;
+    int height = 200;
     auto reconstructedImage = reconstructImage(yBlocks, cbBlocks, crBlocks, width, height);
 
     // Step 5: Save the decompressed image
@@ -243,9 +248,16 @@ void verifyCompressedFile(const std::string& filePath) {
     // Verify the Huffman tree
     std::cout << "Verifying Huffman Tree..." << std::endl;
     char isLeaf;
+    char todo = 'T';
+    int count = 0;
     while (file.get(isLeaf)) {
+        count+=1;
+        if (isLeaf == todo){
+            break;
+        }
         if (isLeaf != 0 && isLeaf != 1) {
-            std::cerr << "Invalid isLeaf value: " << static_cast<int>(isLeaf) << std::endl;
+            //std::cerr << "Invalid isLeaf value: " << static_cast<int>(isLeaf) << " Line Number " << count << std::endl;
+            std::cerr << "Invalid isLeaf value: " << isLeaf << std::endl;
             return;
         }
 
@@ -270,13 +282,13 @@ int main() {
     std::string inputFile = "output.jc";
     std::string outputFile = "decompressed.jpeg";
 
-    // try {
-    //     decompressJPEG(inputFile, outputFile);
-    // } catch (const std::exception& e) {
-    //     std::cerr << "Error: " << e.what() << std::endl;
-    // }
+    try {
+        decompressJPEG(inputFile, outputFile);
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
 
-    verifyCompressedFile(inputFile);
+    // verifyCompressedFile(inputFile);
 
     return 0;
 }

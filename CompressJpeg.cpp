@@ -227,11 +227,8 @@ void freeHuffmanTree(Node* root) {
 void generateCodes(Node* root, const std::string& code, std::map<int, std::string>& huffmanCodes) {
     if (!root) return;
 
-    if (root->value != -1) { // Leaf node
+    if (!root->left && !root->right) { // Leaf node (no children)
         huffmanCodes[root->value] = code;
-    }
-    else{
-        // Internal node reached, skipping
     }
 
     generateCodes(root->left, code + "0", huffmanCodes);
@@ -250,9 +247,7 @@ std::string encodeBlocks(const std::vector<std::vector<int>>& blocks, const std:
     for (const auto& block : blocks) {
         for (int coeff : block) {
             if (huffmanCodes.find(coeff) == huffmanCodes.end()) {
-                // throw std::runtime_error("Missing Huffman code for coefficient: " + std::to_string(coeff));
-                // std::cout << "Missing Huffman code for coefficient: " + std::to_string(coeff) << std::endl;
-                // Do nothing for now
+                throw std::runtime_error("Missing Huffman code for coefficient: " + std::to_string(coeff));
             }
             else{
                 encodedData += huffmanCodes.at(coeff);
@@ -267,7 +262,7 @@ std::string encodeBlocks(const std::vector<std::vector<int>>& blocks, const std:
 void saveHuffmanTree(Node* root, std::ofstream& file) {
     if (!root) return;
 
-    if (root->value != -1) { // Leaf node
+    if (!root->left && !root->right){ // Leaf node
         file.put(1); // Leaf indicator
         file.write(reinterpret_cast<char*>(&root->value), sizeof(root->value));
     } else { // Internal node
@@ -287,6 +282,10 @@ void saveEncodedData(const std::string& encodedData, Node* huffmanTree, const st
 
     // Step 1: Save Huffman tree in compact format
     saveHuffmanTree(huffmanTree, file);
+
+    // To ensure clear separation between the Huffman tree and encoded data
+    const char marker[] = "T";
+    file.write(marker, sizeof(marker));
 
     // Step 2: Save encoded data with optimized bit packing
     uint64_t buffer = 0;
