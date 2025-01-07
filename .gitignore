@@ -36,3 +36,11 @@ compress
 output.jc
 Decompress
 decompressed.jpeg
+coefficients.txt
+flattened_blocks.txt
+cbBlocks_decom.txt
+cbBlocks_original.txt 
+yBlocks_original.txt 
+yBlocks_decom.txt 
+crBlocks_decom.txt
+crBlocks_original.txt 

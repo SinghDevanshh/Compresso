@@ -114,15 +114,25 @@ Block Splitting
 Divide the image into 8x8 blocks for DCT processing
 */
 std::vector<std::vector<int>> splitIntoBlocks(const std::vector<uint8_t>& channel, int width, int height) {
+    // The block size for DCT
+    const int blockSize = 8;
+    
+    // Number of blocks in the width and height of the image
+    int numBlocksX = (width + blockSize - 1) / blockSize;
+    int numBlocksY = height / blockSize;
+
+    std::cout << "numBlocksX --> " << numBlocksX << std::endl;
+
+    // Vector to hold the blocks
     std::vector<std::vector<int>> blocks;
 
-    for (int y = 0; y < height; y += 8) {
-        for (int x = 0; x < width; x += 8) {
-            std::vector<int> block(64);
-            for (int dy = 0; dy < 8; ++dy) {
-                for (int dx = 0; dx < 8; ++dx) {
-                    block[dy * 8 + dx] = (y + dy < height && x + dx < width) ? 
-                        channel[(y + dy) * width + (x + dx)] : 0;
+    for (int by = 0; by < numBlocksY; ++by) {
+        for (int bx = 0; bx < numBlocksX; ++bx) {
+            std::vector<int> block(blockSize * blockSize);
+            for (int y = 0; y < blockSize; ++y) {
+                for (int x = 0; x < blockSize; ++x) {
+                    int index = (by * blockSize + y) * width + (bx * blockSize + x);
+                    block[y * blockSize + x] = channel[index];
                 }
             }
             blocks.push_back(block);
@@ -357,6 +367,11 @@ bool compressJpeg(const std::string& inputPath, const std::string& outputPath, i
         auto cbBlocks = splitIntoBlocks(subsampledCb, img.width / 2, img.height / 2);
         auto crBlocks = splitIntoBlocks(subsampledCr, img.width / 2, img.height / 2);
         std::cout << "Block splitting completed." << std::endl;
+
+        std::cout << yBlocks.size() << std::endl;
+        std::cout << cbBlocks.size() << std::endl;
+        std::cout << crBlocks.size() << std::endl;
+
 
         // Step 5: Apply DCT to each block
         for (auto& block : yBlocks) applyDCT(block);
