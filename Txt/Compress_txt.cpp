@@ -175,6 +175,26 @@ void generateCodes(Node* root, string str) {
     generateCodes(root->r, str + "1");
 }
 
+/*
+------------------------------------------------------------------------------------------------------------------------------------
+Function to write the Huffman tree into file :
+------------------------------------------------------------------------------------------------------------------------------------
+*/
+
+void saveTree(Node* root, ofstream& outFile) {
+    if (!root) return;
+
+    if (!root->l && !root->r) {
+        // Leaf node: write '1' and the character
+        outFile.put('1');
+        outFile.put(root->character);
+    } else {
+        // Internal node: write '0'
+        outFile.put('0');
+        saveTree(root->l, outFile);
+        saveTree(root->r, outFile);
+    }
+}
 
 /*
 ------------------------------------------------------------------------------------------------------------------------------------
@@ -182,19 +202,24 @@ Function to Compress the Text File :
 ------------------------------------------------------------------------------------------------------------------------------------
 */
 
-void compressFile(const string& inputFileName, const string& outputFileName) {
+void compressFile(const string& inputFileName, const string& outputFileName, Node* root) {
     ifstream inFile(inputFileName, ios::in);
     ofstream outFile(outputFileName, ios::out | ios::binary);
 
     if (!inFile.is_open() || !outFile.is_open()) {
-        cerr << "Error opening file!" << endl;
+        cerr << "Error opening files!" << endl;
         return;
     }
 
+    // Step 1: Save the Huffman Tree structure first
+    saveTree(root, outFile);
+
+    // Step 2: Mark end of tree with a special marker
+    outFile.put('#'); // '#' as end of tree marker
+
+    // Step 3: Now compress the data
     string buffer;
     char ch;
-
-    // Read the input file and build the binary string
     while (inFile.get(ch)) {
         buffer += huffmanCodes[ch];
     }
@@ -213,16 +238,15 @@ void compressFile(const string& inputFileName, const string& outputFileName) {
         }
     }
 
-    // Write any remaining bits (pad with zeros)
+    // If leftover bits
     if (count > 0) {
-        byte = byte << (8 - count); // Pad the remaining bits
+        byte = byte << (8 - count);
         outFile.put(byte);
     }
 
     inFile.close();
     outFile.close();
-
-    cout << "Compression complete! Output file: " << outputFileName << endl;
+    cout << "Compression complete. Output written to " << outputFileName << endl;
 }
 
 
@@ -267,35 +291,14 @@ unordered_map<char, int> countFrequencies(const string& filename) {
 
 /*
 ------------------------------------------------------------------------------------------------------------------------------------
-Function to write the Huffman tree into file :
-------------------------------------------------------------------------------------------------------------------------------------
-*/
-
-void saveTree(Node* root, ofstream& outFile) {
-    if (!root) return;
-
-    if (!root->l && !root->r) {
-        // Leaf node: write '1' and the character
-        outFile.put('1');
-        outFile.put(root->character);
-    } else {
-        // Internal node: write '0'
-        outFile.put('0');
-        saveTree(root->l, outFile);
-        saveTree(root->r, outFile);
-    }
-}
-
-
-/*
-------------------------------------------------------------------------------------------------------------------------------------
 Example :
 ------------------------------------------------------------------------------------------------------------------------------------
 */
 
 // Example usage
 int main() {
-    string inputFile = "test_files/big.txt";
+
+    string inputFile = "test_files/Harry_Potter.txt";
     string outputFile = "compressed.bin";
 
     // Step 1: Count frequencies from the input file
@@ -320,7 +323,7 @@ int main() {
     generateCodes(root, "");
 
     // Step 5: Compress the file
-    compressFile(inputFile, outputFile);
+    compressFile(inputFile, outputFile, root);
 
     return 0;
 }
