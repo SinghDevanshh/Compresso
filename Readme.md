@@ -105,4 +105,3 @@ Once built, the tool can be used via the command line to compress and decompress
 | `test1.txt`         | 2 KB          | 971 Bytes        |
 | `test2.txt`         | 13 KB         | 7 KB             |
 | `Harry_Potter.txt`  | 438 KB        | 252 KB           |
-|---------------------|---------------|------------------|
