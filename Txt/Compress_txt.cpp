@@ -246,6 +246,7 @@ void compressFile(const string& inputFileName, const string& outputFileName, Nod
 
     inFile.close();
     outFile.close();
+    
     cout << "Compression complete. Output written to " << outputFileName << endl;
 }
 
@@ -327,7 +328,6 @@ int main() {
 
     return 0;
 }
-
 
 /*
 ------------------------------------------------------------------------------------------------------------------------------------
