@@ -267,6 +267,28 @@ unordered_map<char, int> countFrequencies(const string& filename) {
 
 /*
 ------------------------------------------------------------------------------------------------------------------------------------
+Function to write the Huffman tree into file :
+------------------------------------------------------------------------------------------------------------------------------------
+*/
+
+void saveTree(Node* root, ofstream& outFile) {
+    if (!root) return;
+
+    if (!root->l && !root->r) {
+        // Leaf node: write '1' and the character
+        outFile.put('1');
+        outFile.put(root->character);
+    } else {
+        // Internal node: write '0'
+        outFile.put('0');
+        saveTree(root->l, outFile);
+        saveTree(root->r, outFile);
+    }
+}
+
+
+/*
+------------------------------------------------------------------------------------------------------------------------------------
 Example :
 ------------------------------------------------------------------------------------------------------------------------------------
 */

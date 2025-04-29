@@ -52,8 +52,8 @@ To install and use the File Compressor tool, follow the steps below.
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/SinghDevanshh/File-Compressor.git
-   cd File-Compressor
+   git clone https://github.com/SinghDevanshh/Compresso.git
+   cd Compresso
    ```
 
 2. Build the project:
