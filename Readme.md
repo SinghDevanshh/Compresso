@@ -10,6 +10,7 @@ A file compression tool supporting multiple file formats, developed using C++ an
 - [Installation](#installation)
 - [Usage](#usage)
 - [Technical Details](#technical-details)
+- [Performance](#performance)
 
 ## Project Overview
 
@@ -74,7 +75,7 @@ Once built, the tool can be used via the command line to compress and decompress
 
 ### Decompress a file
 ```bash
-./decompress <input_file> 
+./decompress <input_file>
 ```
 
 ## Technical Details
@@ -90,7 +91,18 @@ Once built, the tool can be used via the command line to compress and decompress
 - Huffman encoding is used for lossless compression, reducing file sizes by analyzing the frequency of symbols (characters/bytes) and creating optimal encoding schemes.
 - The algorithm constructs a binary tree (Huffman tree), where frequent symbols are assigned shorter codes, leading to more efficient storage.
 
-### Performance
+## Performance
 
-- The tool reduces file sizes by up to **40%** for jpeg files.
-- Compression speed has been optimized, with a **25%** performance improvement compared to standard compression algorithms.
+- The tool reduces file sizes by up to **30%** for JPG files.
+- The tool reduces file sizes by up to **50%** for TXT files.
+- Compression speed has been optimized, with a performance improvement.
+
+### Compression Metrics (Text Files)
+
+| File Name           | Original Size | Compressed Size |
+|---------------------|---------------|------------------|
+| `Big.txt`           | 6.5 MB        | 3.7 MB           |
+| `test1.txt`         | 2 KB          | 971 Bytes        |
+| `test2.txt`         | 13 KB         | 7 KB             |
+| `Harry_Potter.txt`  | 438 KB        | 252 KB           |
+```
