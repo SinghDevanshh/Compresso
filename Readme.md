@@ -1,4 +1,4 @@
-# File Compressor
+# Compresso
 
 A file compression tool supporting multiple file formats, developed using C++ and C. The project implements various compression algorithms, with a focus on Huffman encoding for efficient file size reduction. The tool ensures compatibility across different operating systems and file types.
 
