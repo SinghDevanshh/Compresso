@@ -158,7 +158,7 @@ Function to Build Huffman Codes from the Tree :
 ------------------------------------------------------------------------------------------------------------------------------------
 */
 
-// Map to store Huffman codes
+// Map to store Huffman codes (Global)
 unordered_map<char, string> huffmanCodes;
 
 // Recursive function to generate codes
@@ -176,23 +176,136 @@ void generateCodes(Node* root, string str) {
 }
 
 
+/*
+------------------------------------------------------------------------------------------------------------------------------------
+Function to Compress the Text File :
+------------------------------------------------------------------------------------------------------------------------------------
+*/
+
+void compressFile(const string& inputFileName, const string& outputFileName) {
+    ifstream inFile(inputFileName, ios::in);
+    ofstream outFile(outputFileName, ios::out | ios::binary);
+
+    if (!inFile.is_open() || !outFile.is_open()) {
+        cerr << "Error opening file!" << endl;
+        return;
+    }
+
+    string buffer;
+    char ch;
+
+    // Read the input file and build the binary string
+    while (inFile.get(ch)) {
+        buffer += huffmanCodes[ch];
+    }
+
+    // Write bits to file as bytes
+    int count = 0;
+    unsigned char byte = 0;
+    for (char bit : buffer) {
+        byte = byte << 1 | (bit - '0');
+        count++;
+
+        if (count == 8) {
+            outFile.put(byte);
+            count = 0;
+            byte = 0;
+        }
+    }
+
+    // Write any remaining bits (pad with zeros)
+    if (count > 0) {
+        byte = byte << (8 - count); // Pad the remaining bits
+        outFile.put(byte);
+    }
+
+    inFile.close();
+    outFile.close();
+
+    cout << "Compression complete! Output file: " << outputFileName << endl;
+}
+
+
+/*
+------------------------------------------------------------------------------------------------------------------------------------
+Function to Convert map to arrays for tree building :
+------------------------------------------------------------------------------------------------------------------------------------
+*/
+
+void convertMapToArrays(const unordered_map<char, int>& freqMap, vector<char>& chars, vector<int>& freqs) {
+    for (const auto& entry : freqMap) {
+        chars.push_back(entry.first);
+        freqs.push_back(entry.second);
+    }
+}
+
+#include <unordered_map>
+
+/*
+------------------------------------------------------------------------------------------------------------------------------------
+Function to Count character frequencies from the file :
+------------------------------------------------------------------------------------------------------------------------------------
+*/
+
+unordered_map<char, int> countFrequencies(const string& filename) {
+    unordered_map<char, int> freqMap;
+    ifstream file(filename, ios::in);
+
+    if (!file.is_open()) {
+        cerr << "Error opening input file!" << endl;
+        return freqMap;
+    }
+
+    char ch;
+    while (file.get(ch)) {
+        freqMap[ch]++;
+    }
+
+    file.close();
+    return freqMap;
+}
+
+/*
+------------------------------------------------------------------------------------------------------------------------------------
+Example :
+------------------------------------------------------------------------------------------------------------------------------------
+*/
+
 // Example usage
 int main() {
-    char arr[] = { 'a', 'b', 'c', 'd', 'e', 'f' };
-    int freq[] = { 5, 9, 12, 13, 16, 45 };
+    string inputFile = "test_files/big.txt";
+    string outputFile = "compressed.bin";
 
-    int size = sizeof(arr) / sizeof(arr[0]);
+    // Step 1: Count frequencies from the input file
+    unordered_map<char, int> freqMap = countFrequencies(inputFile);
 
-    Min_Heap* minHeap = createAndBuildMin_Heap(arr, freq, size);
-
-    cout << "Min Heap built from given characters and frequencies:" << endl;
-    printMinHeap(minHeap);
-
-    // Clean up memory
-    for (int i = 0; i < size; ++i) {
-        delete minHeap->array[i];
+    if (freqMap.empty()) {
+        cerr << "Input file is empty or error reading!" << endl;
+        return 1;
     }
-    delete minHeap;
+
+    // Step 2: Convert to arrays
+    vector<char> chars;
+    vector<int> freqs;
+    convertMapToArrays(freqMap, chars, freqs);
+    int size = chars.size();
+
+    // Step 3: Build Huffman tree
+    Node* root = buildHuffmanTree(chars.data(), freqs.data(), size);
+
+    // Step 4: Generate Huffman codes
+    huffmanCodes.clear(); // make sure it's empty
+    generateCodes(root, "");
+
+    // Step 5: Compress the file
+    compressFile(inputFile, outputFile);
 
     return 0;
 }
+
+
+/*
+------------------------------------------------------------------------------------------------------------------------------------
+END
+------------------------------------------------------------------------------------------------------------------------------------
+*/
