@@ -102,12 +102,17 @@ void decompressFile(const string& compressedFile, const string& outputFile) {
         return;
     }
 
-    // Step 3: Now decode the compressed data
+    // Step 3: Read actual number of bits
+    int totalBits = 0;
+    inFile.read(reinterpret_cast<char*>(&totalBits), sizeof(int));
+
+    // Step 4: Now decode only 'totalBits' from the stream
     Node* curr = root;
     char byte;
-    while (inFile.read(&byte, 1)) {
+    int bitsRead = 0;
+    while (inFile.read(&byte, 1) && bitsRead < totalBits) {
         bitset<8> bits(byte);
-        for (int i = 7; i >= 0; --i) {
+        for (int i = 7; i >= 0 && bitsRead < totalBits; --i, ++bitsRead) {
             curr = bits[i] ? curr->r : curr->l;
             if (!curr->l && !curr->r) {
                 outFile.put(curr->character);

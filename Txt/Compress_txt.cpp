@@ -217,14 +217,18 @@ void compressFile(const string& inputFileName, const string& outputFileName, Nod
     // Step 2: Mark end of tree with a special marker
     outFile.put('#'); // '#' as end of tree marker
 
-    // Step 3: Now compress the data
+    // Step 3: Build buffer first
     string buffer;
     char ch;
     while (inFile.get(ch)) {
         buffer += huffmanCodes[ch];
     }
 
-    // Write bits to file as bytes
+    // Step 4: Save total number of actual bits
+    int totalBits = buffer.size();
+    outFile.write(reinterpret_cast<const char*>(&totalBits), sizeof(int));
+
+    // Step 5: Now write compressed data
     int count = 0;
     unsigned char byte = 0;
     for (char bit : buffer) {
@@ -249,6 +253,7 @@ void compressFile(const string& inputFileName, const string& outputFileName, Nod
     
     cout << "Compression complete. Output written to " << outputFileName << endl;
 }
+
 
 
 /*
