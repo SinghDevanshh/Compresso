@@ -124,9 +124,9 @@ While Huffman encoding is ideal for **text and binary data**, it's not well-suit
 - **libjpeg**: Used for reading and writing JPEG files with control over quality (used in `CompressJpeg.cpp`).
 - **Standard C/C++ Libraries**: For file handling and memory operations.
 
-> ⚠️ Ensure `libjpeg-dev` is installed before compiling JPEG-related code:
+> ⚠️ Ensure `libjpeg` is installed before compiling JPEG-related code:
 > ```bash
-> sudo apt install libjpeg-dev
+> homebrew install jpeg
 > ```
 
 ### JPEG Compression Results
