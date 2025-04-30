@@ -11,6 +11,7 @@ A file compression tool supporting multiple file formats, developed using C++ an
 - [Usage](#usage)
 - [Technical Details](#technical-details)
 - [Performance](#performance)
+- [JPEG Compression (Lossy)](#jpeg-compression-lossy)
 
 ## Project Overview
 
@@ -82,10 +83,11 @@ Once built, the tool can be used via the command line to compress and decompress
 
 - **Programming Languages**: C++, C
 - **Key Algorithms**: Huffman encoding, data compression techniques
-- **Libraries Used**: 
+- **Libraries Used**:
   - **STB Image**: For handling image input/output.
+  - **libjpeg**: For JPEG recompression with quality control.
   - **Standard C++ Libraries**: For file I/O, math, and system programming.
-  
+
 ### Huffman Encoding
 
 - Huffman encoding is used for lossless compression, reducing file sizes by analyzing the frequency of symbols (characters/bytes) and creating optimal encoding schemes.
@@ -105,3 +107,37 @@ Once built, the tool can be used via the command line to compress and decompress
 | `test1.txt`         | 2 KB          | 971 Bytes        |
 | `test2.txt`         | 13 KB         | 7 KB             |
 | `Harry_Potter.txt`  | 438 KB        | 252 KB           |
+
+## JPEG Compression (Lossy)
+
+In addition to lossless compression using Huffman encoding, this tool also supports **lossy JPEG compression**. Lossy compression is particularly effective for reducing the size of image files while maintaining visual quality. This is done by re-encoding the JPEG using a lower quality factor, which selectively discards less noticeable image data.
+
+### Why Not Huffman for JPEG?
+
+While Huffman encoding is ideal for **text and binary data**, it's not well-suited for JPEG images because:
+- JPEG files are **already compressed**, often with built-in Huffman coding.
+- Applying Huffman compression again typically yields **negligible or even increased size**.
+- Lossy recompression allows **far more significant size reduction** by adjusting image quality.
+
+### Libraries Used
+
+- **libjpeg**: Used for reading and writing JPEG files with control over quality (used in `CompressJpeg.cpp`).
+- **Standard C/C++ Libraries**: For file handling and memory operations.
+
+> ⚠️ Ensure `libjpeg-dev` is installed before compiling JPEG-related code:
+> ```bash
+> sudo apt install libjpeg-dev
+> ```
+
+### JPEG Compression Results
+
+Here are compression results using lossy JPEG recompression with quality factor adjustment:
+
+| File Name        | Original Size | Compressed Size |
+|------------------|----------------|------------------|
+| `test2.jpeg`     | 1.6 MB         | 694 KB           |
+| `test4.jpeg`     | 2.0 MB         | 557 KB           |
+| `testsmall.jpeg` | 878 Bytes      | 999 Bytes        |
+
+> 📌 Note: In rare cases like `testsmall.jpeg`, the recompression might slightly **increase** the file size due to format overhead when quality can't be further reduced.
+

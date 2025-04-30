@@ -6,6 +6,9 @@
 using namespace std;
 
 
+// To run g++ -std=c++11 -o decompress Decompress_txt.cpp
+
+
 /*
 ------------------------------------------------------------------------------------------------------------------------------------
 Structure for tree nodes
