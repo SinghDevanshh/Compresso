@@ -66,3 +66,12 @@ int main(int argc, char* argv[]) {
 // ./main /Users/devansh/File-Compressor/Images/test4.jpeg jpeg
 
 // ./main /Users/devansh/File-Compressor/Images/test3.test jpeg [SHOULD BE A VAILD JPEG as it is renamed from test2]
+
+
+/*
+Todo :
+
+Add functionality so that the main function tracks what the file type is and then compresses it based on that .
+
+Also thinking about adding a frontend to this for project showcase
+*/

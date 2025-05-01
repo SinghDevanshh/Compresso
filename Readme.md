@@ -95,7 +95,7 @@ Once built, the tool can be used via the command line to compress and decompress
 
 ## Performance
 
-- The tool reduces file sizes by up to **30%** for JPG files.
+- The tool reduces file sizes by up to **40%** for JPG files.
 - The tool reduces file sizes by up to **50%** for TXT files.
 - Compression speed has been optimized, with a performance improvement.
 
