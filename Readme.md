@@ -60,7 +60,7 @@ To install and use the File Compressor tool, follow the steps below.
 
 2. Build the project:
    ```bash
-   g++ -std=c++11 -o main main.cpp FileTypeValidator.cpp CompressJpeg.cpp
+   g++ -std=c++11 -o main main.cpp File_Validate/FileTypeValidator.cpp Jpeg/Libjpeg_lossy/LossyJpegCompressor.cpp -I/opt/homebrew/opt/jpeg/include   -L/opt/homebrew/opt/jpeg/lib   -ljpeg
    ```
 
 3. The executable will be available in the directory.
@@ -71,12 +71,15 @@ Once built, the tool can be used via the command line to compress and decompress
 
 ### Compress a file
 ```bash
-./main <input_file> <file_format>
+./main test.jpeg jpeg 90
+
+./main test.txt txt 
+
 ```
 
-### Decompress a file
+### Decompress a txt file
 ```bash
-./decompress <input_file>
+./decompress compressed.txt
 ```
 
 ## Technical Details

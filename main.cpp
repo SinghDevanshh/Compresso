@@ -87,5 +87,7 @@ int main(int argc, char* argv[]) {
 /*
 Todo :
 
+Add text and figure out a better method to link main 
+
 Also thinking about adding a frontend to this for project showcase
 */
