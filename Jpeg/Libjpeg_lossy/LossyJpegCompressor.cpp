@@ -1,7 +1,10 @@
+// LossyJpegCompressor.cpp
+#include "LossyJpegCompressor.h"
 #include <iostream>
 #include <stdio.h>
 #include <jpeglib.h>
 #include <stdlib.h>
+#include <string.h>
 
 void compress_jpeg(const char* input_filename, const char* output_filename, int quality) {
     FILE* infile = fopen(input_filename, "rb");
@@ -78,18 +81,18 @@ void compress_jpeg(const char* input_filename, const char* output_filename, int 
     std::cout << "Compression complete: " << output_filename << std::endl;
 }
 
-int main(int argc, char* argv[]) {
-    if (argc < 4) {
-        std::cerr << "Usage: " << argv[0] << " <input.jpg> <output.jpg> <quality (0-100)>\n";
-        return 1;
-    }
+// int main(int argc, char* argv[]) {
+//     if (argc < 4) {
+//         std::cerr << "Usage: " << argv[0] << " <input.jpg> <output.jpg> <quality (0-100)>\n";
+//         return 1;
+//     }
 
-    const char* input = argv[1];
-    const char* output = argv[2];
-    int quality = atoi(argv[3]);
-    compress_jpeg(input, output, quality);
-    return 0;
-}
+//     const char* input = argv[1];
+//     const char* output = argv[2];
+//     int quality = atoi(argv[3]);
+//     compress_jpeg(input, output, quality);
+//     return 0;
+// }
 
 /*
 

@@ -3,11 +3,14 @@
 #include <fstream>
 #include <stdexcept>
 #include <algorithm>
+#include <cctype>
 
 /*
 How does it work:
 To ensure a file is a valid JPEG, verify its first few bytes (magic number), not just the file extension.
 The first two bytes must be 0xFFD8, which is part of the JPEG file signature.
+
+For TXT, we simply check if the file exists and contains readable text characters.
 */
 
 // Function to check if a file exists
@@ -34,21 +37,31 @@ bool validateFileType(const std::string &filePath, FileType expectedType) {
         throw std::invalid_argument("File does not exist.");
     }
 
-    std::vector<unsigned char> headerBytes;
-    size_t requiredBytes = 0;
-    std::vector<uint8_t> expectedHeader = {0xFF, 0xD8, 0xFF};
-
-
     switch (expectedType) {
-        case FileType::JPEG:
-            requiredBytes = expectedHeader.size();
-            break;
-        // Add more cases here for different file types
+        case FileType::JPEG: {
+            std::vector<uint8_t> expectedHeader = {0xFF, 0xD8, 0xFF};
+            size_t requiredBytes = expectedHeader.size();
+            std::vector<unsigned char> headerBytes = readHeaderBytes(filePath, requiredBytes);
+            return std::equal(expectedHeader.begin(), expectedHeader.end(), headerBytes.begin());
+        }
+
+        case FileType::TXT: {
+            std::ifstream file(filePath);
+            if (!file) return false;
+
+            // Check the first 512 characters to see if they are printable or whitespace
+            char ch;
+            int count = 0;
+            while (file.get(ch) && count < 512) {
+                if (!std::isprint(static_cast<unsigned char>(ch)) && !std::isspace(static_cast<unsigned char>(ch))) {
+                    return false;
+                }
+                count++;
+            }
+            return true;
+        }
+
         default:
             throw std::invalid_argument("Unsupported file type.");
     }
-
-    headerBytes = readHeaderBytes(filePath, requiredBytes);
-
-    return std::equal(expectedHeader.begin(), expectedHeader.end(), headerBytes.begin());
 }

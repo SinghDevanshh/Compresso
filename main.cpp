@@ -1,30 +1,42 @@
 // main.cpp
-#include "FileTypeValidator.h"
-#include "CompressJpeg.h"
+#include "File_Validate/FileTypeValidator.h"
+#include "Jpeg/Libjpeg_lossy/LossyJpegCompressor.h"
+#include <algorithm>
+#include <cctype>
+#include <string>
 #include <iostream>
 
 int main(int argc, char* argv[]) {
     // Check if the correct number of arguments is provided
-    if (argc != 3) {
-        std::cerr << "Usage: " << argv[0] << " <file_path> <file_type>\n";
+    if (argc < 3) {
+        std::cerr << "Usage: " << argv[0] << " <file_path> <file_type> <Quality(optional)>\n";
         std::cerr << "Supported file types:\n";
         std::cerr << "  jpeg\n";
+        std::cerr << "  txt\n";
         // TODO -> List more supported types here
         return 1;
     }
 
-    std::string filePath = argv[1];
+    // Default quality set to 75 if not provided
+    int quality = 75;
+
+    if (argc == 4) {
+        quality = atoi(argv[2]);
+    }
+
+    const char * filePath = argv[1];
     std::string fileTypeStr = argv[2];
-    std::string outputFilePath = "output.jc";
-    int quality;
+    std::transform(fileTypeStr.begin(), fileTypeStr.end(), fileTypeStr.begin(),[](unsigned char c){ return std::tolower(c); });
 
     FileType expectedType;
 
     // Map string input to FileType enum
-    if (fileTypeStr == "jpeg" || fileTypeStr == "JPEG") {
+    if (fileTypeStr == "jpeg") {
         expectedType = FileType::JPEG;
     }
-
+    else if (fileTypeStr == "txt") {
+        expectedType = FileType::TXT;
+    }
     //TODO -> Add more elif for more file types
     else {
         std::cerr << "Unsupported file type: " << fileTypeStr << "\n";
@@ -44,34 +56,36 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    bool success = compressJpeg(filePath, outputFilePath , quality);
-
-    if (success) {
-        std::cout << "The file has been compressed" << std::endl;
+    if (fileTypeStr == "txt"){
+        // Compress txt file
     }
+
+    else if (fileTypeStr == "jpeg"){
+        // Compress jpeg file
+        const char * outputFilePath = "compressed.jpeg";
+        compress_jpeg(filePath, outputFilePath , quality);
+    }
+
     else{
-        std::cout << "There was an error " << std::endl;
+        std::cerr << "Error" << "\n";
+        return 1;
     }
-
 
     return 0;
 }
 
 
-
 // Commands to run file on bash (can pick either one)
-//  g++ -std=c++11 -o main main.cpp FileTypeValidator.cpp CompressJpeg.cpp
-//  g++ -std=c++14 -o main main.cpp FileTypeValidator.cpp CompressJpeg.cpp
+//  g++ -std=c++11 -o main main.cpp File_Validate/FileTypeValidator.cpp Jpeg/Libjpeg_lossy/LossyJpegCompressor.cpp -I/opt/homebrew/opt/jpeg/include   -L/opt/homebrew/opt/jpeg/lib   -ljpeg
+//  g++ -std=c++14 -o main main.cpp File_Validate/FileTypeValidator.cpp Jpeg/Libjpeg_lossy/LossyJpegCompressor.cpp -I/opt/homebrew/opt/jpeg/include   -L/opt/homebrew/opt/jpeg/lib   -ljpeg
+// 
 
-// ./main /Users/devansh/File-Compressor/Images/test4.jpeg jpeg
-
-// ./main /Users/devansh/File-Compressor/Images/test3.test jpeg [SHOULD BE A VAILD JPEG as it is renamed from test2]
+// ./main test.jpeg jpeg 90
+// ./main test.jpeg jpeg 
 
 
 /*
 Todo :
-
-Add functionality so that the main function tracks what the file type is and then compresses it based on that .
 
 Also thinking about adding a frontend to this for project showcase
 */

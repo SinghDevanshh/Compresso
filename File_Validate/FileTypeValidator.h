@@ -8,6 +8,7 @@
 // Enumeration for supported file types
 enum class FileType {
     JPEG,
+    TXT,
     // TO add more functionality later on
 };
 
