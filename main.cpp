@@ -58,6 +58,7 @@ int main(int argc, char* argv[]) {
 
     if (fileTypeStr == "txt"){
         // Compress txt file
+        // TODO add way for main to decide run compress and an option maybe for decompress ?
     }
 
     else if (fileTypeStr == "jpeg"){
