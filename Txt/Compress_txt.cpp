@@ -2,6 +2,7 @@
 #include <vector>
 #include <unordered_map>
 #include <fstream>
+#include "Compress_txt.h"
 
 using namespace std;
 
@@ -300,41 +301,26 @@ unordered_map<char, int> countFrequencies(const string& filename) {
 
 /*
 ------------------------------------------------------------------------------------------------------------------------------------
-Example :
+Export Function :
 ------------------------------------------------------------------------------------------------------------------------------------
 */
 
-// Example usage
-int main() {
-
-    string inputFile = "test_files/Harry_Potter.txt";
-    string outputFile = "compressed.bin";
-
-    // Step 1: Count frequencies from the input file
+// Usage
+void compress_txt_file(const string& inputFile, const string& outputFile) {
     unordered_map<char, int> freqMap = countFrequencies(inputFile);
-
     if (freqMap.empty()) {
         cerr << "Input file is empty or error reading!" << endl;
-        return 1;
+        return;
     }
 
-    // Step 2: Convert to arrays
     vector<char> chars;
     vector<int> freqs;
     convertMapToArrays(freqMap, chars, freqs);
-    int size = chars.size();
 
-    // Step 3: Build Huffman tree
-    Node* root = buildHuffmanTree(chars.data(), freqs.data(), size);
-
-    // Step 4: Generate Huffman codes
-    huffmanCodes.clear(); // make sure it's empty
+    Node* root = buildHuffmanTree(chars.data(), freqs.data(), chars.size());
+    huffmanCodes.clear();
     generateCodes(root, "");
-
-    // Step 5: Compress the file
     compressFile(inputFile, outputFile, root);
-
-    return 0;
 }
 
 /*

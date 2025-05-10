@@ -3,6 +3,8 @@
 #include <unordered_map>
 #include <queue>
 #include <bitset>
+#include "Decompress_txt.h"
+
 using namespace std;
 
 
@@ -85,7 +87,7 @@ Function to decode bitstream using Huffman tree
 ------------------------------------------------------------------------------------------------------------------------------------
 */
 
-void decompressFile(const string& compressedFile, const string& outputFile) {
+void decompress_txt_file(const string& compressedFile, const string& outputFile) {
     ifstream inFile(compressedFile, ios::binary);
     ofstream outFile(outputFile);
 
@@ -137,13 +139,13 @@ Example :
 ------------------------------------------------------------------------------------------------------------------------------------
 */
 
-int main() {
-    string compressed = "compressed.bin";
-    string output = "output.txt";
+// int main() {
+//     string compressed = "compressed.bin";
+//     string output = "output.txt";
 
-    decompressFile(compressed, output);
-    return 0;
-}
+//     decompress_txt_file(compressed, output);
+//     return 0;
+// }
 
 
 /*

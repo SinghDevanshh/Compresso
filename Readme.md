@@ -1,6 +1,6 @@
 # Compresso
 
-A file compression tool supporting multiple file formats, developed using C++ and C. The project implements various compression algorithms, with a focus on Huffman encoding for efficient file size reduction. The tool ensures compatibility across different operating systems and file types.
+A file compression tool supporting multiple file formats, developed using C++ and C. The project implements various compression algorithms, with a focus on Huffman encoding for efficient file size reduction. The tool also supports lossy JPEG compression using `libjpeg`. It is optimized for speed and designed to work across major operating systems.
 
 ## Table of Contents
 
@@ -15,105 +15,138 @@ A file compression tool supporting multiple file formats, developed using C++ an
 
 ## Project Overview
 
-The File Compressor project aims to provide an efficient way to reduce file sizes while maintaining data integrity. Using advanced compression algorithms, such as Huffman encoding, the tool supports a variety of file types and is optimized for cross-platform use.
+**Compresso** provides a lightweight and extensible way to compress and decompress files. The project uses Huffman encoding for text files and lossy quality-adjustable recompression for JPEGs. It is written in C++ and C and works on Linux, macOS, and Windows with minimal setup.
 
 ## Features
 
-- **Support for multiple file formats**: Compresses various file types.
-- **Efficient compression algorithms**: Utilizes Huffman encoding for lossless compression.
-- **Cross-platform compatibility**: Works across different operating systems (Linux, Windows, macOS).
-- **Fast compression speed**: The tool has been optimized for speed with a 25% improvement in performance compared to standard algorithms.
-- **Data integrity**: Ensures that no data is lost during compression or decompression.
+- 🗂️ **Multi-format support**: Compresses JPEG and text files (more coming soon).
+- ⚡ **Fast & efficient**: Optimized Huffman implementation and JPEG quality control.
+- 🔁 **Bidirectional support**: Compress and decompress `.txt` files.
+- 🛠️ **Cross-platform**: Compatible with major operating systems.
+- 🧩 **Modular code**: Easy to extend with new file types and algorithms.
+
+---
 
 ## How It Works
 
-### Compression Process
+### Text File Compression
 
-1. **File Analysis**: The tool reads the input file and analyzes the frequency of characters (or bytes) within the file.
-2. **Huffman Tree Construction**: Based on the frequency analysis, a Huffman tree is built to create optimal encoding.
-3. **Encoding**: The input file is encoded using the generated Huffman tree, reducing its size.
-4. **Saving**: The compressed file is saved in a custom format for future decompression.
+1. **Frequency Analysis**: Counts character frequencies.
+2. **Huffman Tree Construction**: Builds tree using a min-heap.
+3. **Encoding**: Encodes input text with Huffman codes.
+4. **Output**: Saves both tree and bitstream in binary format.
 
-### Decompression Process
+### Text File Decompression
 
-1. **Huffman Tree Loading**: The tool loads the Huffman tree from the compressed file.
-2. **Decoding**: The encoded data is decoded using the Huffman tree, reconstructing the original file.
-3. **Saving**: The decompressed file is saved to the specified output path.
+1. **Tree Reconstruction**: Loads tree from compressed file.
+2. **Bitstream Decoding**: Decodes Huffman-encoded stream.
+3. **Reconstruction**: Writes back the original file.
+
+### JPEG Compression
+
+1. **Read JPEG**: Using `libjpeg`.
+2. **Recompress**: Apply lossy compression with quality factor.
+3. **Write New JPEG**: Save the recompressed version.
+
+---
 
 ## Installation
 
-To install and use the File Compressor tool, follow the steps below.
-
 ### Prerequisites
 
-- C++11 or higher
-- A C compiler (e.g., GCC or Clang)
-- CMake (for building the project)
+- A C++11-compatible compiler (e.g., GCC or Clang)
+- `libjpeg` installed (`brew install jpeg` on macOS)
+- `make` (recommended for building)
 
-### Steps
+### Build Instructions
 
 1. Clone the repository:
-   ```bash
-   git clone https://github.com/SinghDevanshh/Compresso.git
-   cd Compresso
-   ```
 
-2. Build the project:
-   ```bash
-   g++ -std=c++11 -o main main.cpp File_Validate/FileTypeValidator.cpp Jpeg/Libjpeg_lossy/LossyJpegCompressor.cpp -I/opt/homebrew/opt/jpeg/include   -L/opt/homebrew/opt/jpeg/lib   -ljpeg
-   ```
+```bash
+git clone https://github.com/SinghDevanshh/Compresso.git
+cd Compresso
+````
 
-3. The executable will be available in the directory.
+2. Build using the provided `Makefile`:
+
+```bash
+make
+```
+
+3. The `main` executable will be generated in the root directory.
+
+> To clean up build artifacts:
+
+```bash
+make clean
+```
+
+---
 
 ## Usage
 
-Once built, the tool can be used via the command line to compress and decompress files.
+Run the executable with the following format:
 
-### Compress a file
 ```bash
-./main test.jpeg jpeg 90
-
-./main test.txt txt 
-
+./main <input_file_path> <file_type> [quality or --decompress]
 ```
 
-### Decompress a txt file
+### 📦 Compress a JPEG file
+
 ```bash
-./decompress compressed.txt
+./main test_images/test.jpeg jpeg 85
 ```
+
+### 📦 Compress a text file
+
+```bash
+./main test_files/sample.txt txt
+```
+
+### 📥 Decompress a text file
+
+```bash
+./main compressed.bin txt --decompress
+```
+
+---
 
 ## Technical Details
 
-- **Programming Languages**: C++, C
-- **Key Algorithms**: Huffman encoding, data compression techniques
-- **Libraries Used**:
-  - **STB Image**: For handling image input/output.
-  - **libjpeg**: For JPEG recompression with quality control.
-  - **Standard C++ Libraries**: For file I/O, math, and system programming.
+* **Languages**: C++, C
+* **Algorithms**: Huffman Encoding (for `.txt`), JPEG lossy recompression
+* **Libraries**:
+
+  * `libjpeg`: For JPEG decoding and recompression
+  * Standard C++ STL: For containers, file I/O, etc.
 
 ### Huffman Encoding
 
-- Huffman encoding is used for lossless compression, reducing file sizes by analyzing the frequency of symbols (characters/bytes) and creating optimal encoding schemes.
-- The algorithm constructs a binary tree (Huffman tree), where frequent symbols are assigned shorter codes, leading to more efficient storage.
+* Huffman encoding assigns shorter codes to frequent characters.
+* Our implementation builds the Huffman tree, encodes the input, and stores the tree in the output for decompression.
+
+---
 
 ## Performance
 
-- The tool reduces file sizes by up to **40%** for JPG files.
-- The tool reduces file sizes by up to **50%** for TXT files.
-- Compression speed has been optimized, with a performance improvement.
+* Reduces JPEG file sizes by up to **40%**
+* Reduces text file sizes by up to **50%**
+* Optimized compression routines with fast I/O handling
 
-### Compression Metrics (Text Files)
+### 📊 Compression Results (Text)
 
-| File Name           | Original Size | Compressed Size |
-|---------------------|---------------|------------------|
-| `Big.txt`           | 6.5 MB        | 3.7 MB           |
-| `test1.txt`         | 2 KB          | 971 Bytes        |
-| `test2.txt`         | 13 KB         | 7 KB             |
-| `Harry_Potter.txt`  | 438 KB        | 252 KB           |
+| File Name          | Original Size | Compressed Size |
+| ------------------ | ------------- | --------------- |
+| `Big.txt`          | 6.5 MB        | 3.7 MB          |
+| `test1.txt`        | 2 KB          | 971 Bytes       |
+| `test2.txt`        | 13 KB         | 7 KB            |
+| `Harry_Potter.txt` | 438 KB        | 252 KB          |
+
+---
 
 ## JPEG Compression (Lossy)
 
-In addition to lossless compression using Huffman encoding, this tool also supports **lossy JPEG compression**. Lossy compression is particularly effective for reducing the size of image files while maintaining visual quality. This is done by re-encoding the JPEG using a lower quality factor, which selectively discards less noticeable image data.
+Lossy JPEG compression works by adjusting the image quality factor using `libjpeg`. This is ideal for large JPEGs where some quality loss is acceptable in exchange for space savings.
 
 ### Why Not Huffman for JPEG?
 
@@ -143,4 +176,3 @@ Here are compression results using lossy JPEG recompression with quality factor 
 | `testsmall.jpeg` | 878 Bytes      | 999 Bytes        |
 
 > 📌 Note: In rare cases like `testsmall.jpeg`, the recompression might slightly **increase** the file size due to format overhead when quality can't be further reduced.
-

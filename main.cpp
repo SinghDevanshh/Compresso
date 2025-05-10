@@ -1,6 +1,8 @@
 // main.cpp
 #include "File_Validate/FileTypeValidator.h"
 #include "Jpeg/Libjpeg_lossy/LossyJpegCompressor.h"
+#include "Txt/Compress_txt.h"
+#include "Txt/Decompress_txt.h"
 #include <algorithm>
 #include <cctype>
 #include <string>
@@ -9,7 +11,7 @@
 int main(int argc, char* argv[]) {
     // Check if the correct number of arguments is provided
     if (argc < 3) {
-        std::cerr << "Usage: " << argv[0] << " <file_path> <file_type> <Quality(optional)>\n";
+        std::cerr << "Usage: " << argv[0] << " <file_path> <file_type> <[Quality for jpeg] or [--decompress for txt] (optional)>\n";
         std::cerr << "Supported file types:\n";
         std::cerr << "  jpeg\n";
         std::cerr << "  txt\n";
@@ -21,7 +23,7 @@ int main(int argc, char* argv[]) {
     int quality = 75;
 
     if (argc == 4) {
-        quality = atoi(argv[2]);
+        quality = atoi(argv[3]);
     }
 
     const char * filePath = argv[1];
@@ -46,7 +48,7 @@ int main(int argc, char* argv[]) {
     // In a try catch block to handle exceptions thrown by the FileTypeValidator
     try {
         bool isValid = validateFileType(filePath, expectedType);
-        if (isValid) {
+        if (isValid || std::string(argv[3]) == "--decompress") {
             std::cout << "The file is a valid " << fileTypeStr << " file.\n";
         } else {
             std::cout << "The file is NOT a valid " << fileTypeStr << " file.\n";
@@ -58,7 +60,15 @@ int main(int argc, char* argv[]) {
 
     if (fileTypeStr == "txt"){
         // Compress txt file
-        // TODO add way for main to decide run compress and an option maybe for decompress ?
+        const std::string inputFile = filePath;
+
+        if (argc == 4 && std::string(argv[3]) == "--decompress") {
+            const std::string outputFile = "output.txt";
+            decompress_txt_file(inputFile, outputFile);
+        } else {
+            const std::string outputFile = "compressed.bin";
+            compress_txt_file(inputFile, outputFile);
+        }
     }
 
     else if (fileTypeStr == "jpeg"){
@@ -76,19 +86,29 @@ int main(int argc, char* argv[]) {
 }
 
 
-// Commands to run file on bash (can pick either one)
-//  g++ -std=c++11 -o main main.cpp File_Validate/FileTypeValidator.cpp Jpeg/Libjpeg_lossy/LossyJpegCompressor.cpp -I/opt/homebrew/opt/jpeg/include   -L/opt/homebrew/opt/jpeg/lib   -ljpeg
-//  g++ -std=c++14 -o main main.cpp File_Validate/FileTypeValidator.cpp Jpeg/Libjpeg_lossy/LossyJpegCompressor.cpp -I/opt/homebrew/opt/jpeg/include   -L/opt/homebrew/opt/jpeg/lib   -ljpeg
-// 
+/* Usage :
 
-// ./main test.jpeg jpeg 90
-// ./main test.jpeg jpeg 
+Commands to run file on bash (can pick either one)
+
+g++ -std=c++11 -o main main.cpp File_Validate/FileTypeValidator.cpp Jpeg/Libjpeg_lossy/LossyJpegCompressor.cpp -I/opt/homebrew/opt/jpeg/include   -L/opt/homebrew/opt/jpeg/lib   -ljpeg
+
+OR 
+
+g++ -std=c++14 -o main main.cpp File_Validate/FileTypeValidator.cpp Jpeg/Libjpeg_lossy/LossyJpegCompressor.cpp -I/opt/homebrew/opt/jpeg/include   -L/opt/homebrew/opt/jpeg/lib   -ljpeg
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+./main test.jpeg jpeg 90
+
+OR 
+
+./main test.jpeg jpeg 
+
+*/
 
 
 /*
 Todo :
 
-Add text and figure out a better method to link main 
-
-Also thinking about adding a frontend to this for project showcase
+Thinking about adding a frontend to this for project showcase
 */
